@@ -1,20 +1,9 @@
 import type { Report } from '@/lib/audit/types'
-import { Globe, FileText, Image, Hash, Clock, Activity, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { Globe, FileText, Image, Hash, Clock, Activity, AlertTriangle } from 'lucide-react'
+import { TypewriterText } from '@/components/ui/typewriter'
 
 interface AuditReportProps {
   report: Report
-}
-
-function statusColor(code: number): string {
-  if (code >= 200 && code < 300) return 'text-green-700 dark:text-green-400'
-  if (code >= 300 && code < 400) return 'text-amber-700 dark:text-amber-400'
-  return 'text-red-700 dark:text-red-400'
-}
-
-function timeColor(ms: number): string {
-  if (ms < 1000) return 'text-green-700 dark:text-green-400'
-  if (ms < 3000) return 'text-amber-700 dark:text-amber-400'
-  return 'text-red-700 dark:text-red-400'
 }
 
 function statusBadge(code: number): string {
@@ -52,23 +41,49 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
+function TypeField({ label, text, delay = 0 }: { label: string; text: string; delay?: number }) {
+  return (
+    <div className="sm:flex sm:items-baseline sm:gap-3">
+      <p className="text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500 sm:w-40 sm:shrink-0 sm:text-right">{label}</p>
+      <p className="mt-0.5 text-sm text-zinc-800 dark:text-zinc-200 sm:mt-0">
+        <TypewriterText text={text} speed={15} delay={delay} />
+      </p>
+    </div>
+  )
+}
+
+function TypeFieldNumber({ label, value, delay = 0, suffix }: { label: string; value: number; delay?: number; suffix?: string }) {
+  return (
+    <div className="sm:flex sm:items-baseline sm:gap-3">
+      <p className="text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500 sm:w-40 sm:shrink-0 sm:text-right">{label}</p>
+      <p className="mt-0.5 text-sm font-medium text-zinc-800 dark:text-zinc-200 sm:mt-0">
+        <TypewriterText text={`${value}${suffix ?? ''}`} speed={40} delay={delay} />
+      </p>
+    </div>
+  )
+}
+
 export function AuditReport({ report }: AuditReportProps) {
   return (
     <div className="space-y-8">
       <Section title="Page Basics" icon={Globe} delay="delay-100">
-        <Field label="URL" value={<span className="break-all">{report.url}</span>} />
-        <Field label="Title" value={report.title ?? <span className="italic text-zinc-400">(none)</span>} />
-        <Field label="Meta Description" value={report.metaDescription ?? <span className="italic text-zinc-400">(none)</span>} />
+        <TypeField label="URL" text={report.url} delay={0} />
+        <TypeField label="Title" text={report.title ?? '(none)'} delay={200} />
+        <TypeField label="Meta Description" text={report.metaDescription ?? '(none)'} delay={400} />
       </Section>
 
       <Section title="SEO Signals" icon={Image} delay="delay-200">
-        <Field label="H1 Count" value={report.h1Count} />
-        <Field label="Total Images" value={report.totalImages} />
+        <TypeFieldNumber label="H1 Count" value={report.h1Count} delay={0} />
+        <TypeFieldNumber label="Total Images" value={report.totalImages} delay={200} />
         <Field
           label="Images Missing Alt"
           value={
             <span className={report.imagesMissingAlt > 0 ? 'text-amber-700 dark:text-amber-400 font-medium' : ''}>
-              {report.imagesMissingAlt}
+              <TypewriterText
+                text={String(report.imagesMissingAlt)}
+                speed={40}
+                delay={400}
+              />
               {report.imagesMissingAlt > 0 && <span className="ml-1.5 text-xs">⚠</span>}
             </span>
           }
@@ -92,7 +107,7 @@ export function AuditReport({ report }: AuditReportProps) {
             </span>
           }
         />
-        <Field label="Word Count" value={report.wordCount.toLocaleString()} />
+        <TypeFieldNumber label="Word Count" value={report.wordCount} delay={0} suffix="" />
       </Section>
     </div>
   )
