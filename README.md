@@ -1,17 +1,36 @@
 # Page Pulse
 
-A URL audit tool. Submit a URL and get a structural HTML report: HTTP status, response time, title, meta description, H1 count, images missing alt text, and approximate word count.
+A URL audit tool that performs a structural analysis of any public web page. Submit a URL and receive HTTP status, response time, title, meta description, H1 count, images missing alt text, and approximate word count — all without a headless browser.
 
-Built for the Digital Heroes internship qualification task.
+**Live:** [page-pulse-delta-mocha.vercel.app](https://page-pulse-delta-mocha.vercel.app)
+
+---
+
+## Features
+
+- **Structural HTML audit** — extracts title, meta description, H1 headings, image alt attributes, and word count from server-rendered HTML
+- **Performance metrics** — measures HTTP status code and response time for each request
+- **Error classification** — distinct, user-facing errors for invalid URLs, unreachable hosts, timeouts, and non-HTML responses
+- **SSRF protection** — DNS-resolves every target hostname and rejects private, loopback, and link-local IPs before making a request
+- **Redirect safety** — manually follows up to 3 hops, re-validating each target with the full security check before following
+- **Response-size limit** — streams the body with a 5 MB cap to prevent unbounded memory usage
+- **Request deduplication** — cancels any in-flight request when a new URL is submitted
+
+---
 
 ## Tech Stack
 
-- **Framework:** Next.js (App Router)
-- **Language:** TypeScript (strict)
-- **UI:** Tailwind CSS v4
-- **HTML Parsing:** cheerio
-- **Testing:** Vitest
-- **Deployment:** Vercel
+| Layer | Technology |
+|---|---|
+| Framework | [Next.js](https://nextjs.org) 16.2.11 (App Router) |
+| Language | TypeScript (strict mode) |
+| Styling | [Tailwind CSS](https://tailwindcss.com) v4 + [shadcn/ui](https://ui.shadcn.com) |
+| HTML parsing | [cheerio](https://cheerio.js.org) |
+| Testing | [Vitest](https://vitest.dev) |
+| Linting | [ESLint](https://eslint.org) |
+| Deployment | [Vercel](https://vercel.com) |
+
+---
 
 ## Getting Started
 
@@ -22,22 +41,26 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Scripts
+### Scripts
 
-| Command           | Description              |
-| ----------------- | ------------------------ |
-| `npm run dev`     | Start dev server         |
-| `npm run build`   | Production build         |
-| `npm run test`    | Run tests                |
-| `npm run lint`    | Run linter               |
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the development server |
+| `npm run build` | Create a production build |
+| `npm start` | Start the production server |
+| `npm test` | Run all tests (single run) |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run lint` | Run ESLint |
 
-## API Contract
+---
+
+## API
 
 ### `POST /api/audit`
 
-Submit a URL for auditing.
+Fetches and analyzes a public URL.
 
-**Request body**
+**Request**
 
 ```json
 {
@@ -45,7 +68,7 @@ Submit a URL for auditing.
 }
 ```
 
-**Response (200)**
+**Success response (200)**
 
 ```json
 {
@@ -67,12 +90,12 @@ Submit a URL for auditing.
 
 **Error responses**
 
-| HTTP Status | Code | Meaning |
+| Status | Code | Meaning |
 |---|---|---|
 | 400 | `INVALID_URL` | Malformed, empty, or private/local URL |
 | 502 | `UNREACHABLE` | Host unreachable or DNS failure |
-| 504 | `TIMEOUT` | Response took longer than 8 seconds |
-| 422 | `NOT_HTML` | Response was not HTML (PDF, image, etc.) |
+| 504 | `TIMEOUT` | Response exceeded the 8-second limit |
+| 422 | `NOT_HTML` | Response content-type is not HTML |
 | 500 | `INTERNAL` | Unexpected server error |
 
 ```json
@@ -85,28 +108,104 @@ Submit a URL for auditing.
 }
 ```
 
-## Design Decisions
+---
 
-### 1. cheerio over Puppeteer/Playwright
-A headless browser would allow JavaScript-rendered page auditing and screenshots, but it adds cold-start latency and complexity disproportionate to a structural HTML audit. cheerio gives sub-millisecond parsing with zero runtime dependencies.
+## Project Structure
 
-### 2. 8-second timeout
-The outbound fetch uses an `AbortController` with an 8-second budget. Long enough for slow real sites, short enough that the evaluator isn't left waiting.
-
-### 3. Word count approximation
-Visible text nodes are counted after stripping `<script>`, `<style>`, and `<noscript>` content. This is documented as an approximation — exact typographic word count would require a renderer.
-
-## Security
-
-### Server-Side Request Forgery (SSRF) protection
-The hostname is **resolved via DNS first**, then the resolved IP is checked against private (10.x.x.x, 172.16-31.x.x, 192.168.x.x), loopback (127.x.x.x, ::1), and link-local (169.254.x.x) ranges. This catches attackers who point a domain's DNS record at an internal address — pattern-matching the hostname string alone would miss that.
-
-### Redirect safety
-Redirects are handled **manually** (not auto-followed by the fetch runtime), capped at **3 hops**, and each redirect target is re-validated with the same full DN`S + private-IP check before it is followed. This prevents a redirect chain from reaching an internal server.
-
-### Response-size limit
-The response body is streamed and capped at **5 MB**. If the limit is exceeded, the reader is cancelled and the partial content is discarded — the server never buffers an unbounded response.
+```
+├── app/
+│   ├── api/
+│   │   └── audit/
+│   │       └── route.ts          # API endpoint
+│   ├── globals.css               # Global styles + theme tokens
+│   ├── layout.tsx                # Root layout
+│   └── page.tsx                  # Home page (client component)
+├── components/
+│   ├── audit/
+│   │   ├── AuditError.tsx        # Error state display
+│   │   ├── AuditForm.tsx         # URL input + submit
+│   │   └── AuditReport.tsx       # Audit results display
+│   ├── layout/
+│   │   └── Footer.tsx
+│   └── ui/
+│       ├── alert.tsx
+│       ├── button.tsx
+│       ├── card.tsx
+│       ├── input.tsx
+│       └── skeleton.tsx
+├── lib/
+│   └── audit/
+│       ├── analyze.ts            # HTML parsing + field extraction
+│       ├── analyze.test.ts       # 8 tests for analyze logic
+│       ├── fetchTarget.ts        # HTTP fetch + SSRF check + redirect handling
+│       ├── fetchTarget.test.ts   # 13 tests for SSRF + redirect safety
+│       ├── types.ts              # Report, AuditError, AuditResult types
+│       └── utils.ts              # cn() utility
+├── vitest.config.ts
+├── next.config.ts
+├── tsconfig.json
+└── package.json
+```
 
 ---
 
-Built for [Digital Heroes Training Task](https://digitalheroesco.com)
+## Design Decisions
+
+### 1. cheerio over a headless browser
+
+A headless browser (Puppeteer/Playwright) would enable JavaScript-rendered page auditing and screenshots, but it adds cold-start latency and complexity disproportionate to a structural HTML audit. cheerio provides sub-millisecond parsing with zero runtime dependencies and a familiar jQuery-like API.
+
+**Trade-off:** Pages that rely entirely on client-side rendering will not be fully captured. For this qualification task (structural audit of server-rendered HTML), cheerio is the correct choice.
+
+### 2. 8-second timeout with AbortController
+
+The outbound fetch uses an `AbortController` with an 8-second budget. This is long enough for slow-but-legitimate sites and short enough that the user isn't left waiting. The timeout is distinct from the redirect hop limit — each individual hop must complete within 8 seconds.
+
+### 3. Word count as an approximation
+
+Visible text is counted after stripping `<script>`, `<style>`, and `<noscript>` elements. This yields a close approximation without requiring a full render pass. Exact typographic word count (accounting for CSS `display: none`, `visibility: hidden`, etc.) would require a browser engine.
+
+---
+
+## Security
+
+### SSRF protection
+
+The target hostname is **resolved via DNS** (`dns.promises.lookup`) before any fetch is made. The resolved IP is then checked against private (10.x.x.x, 172.16–31.x.x, 192.168.x.x), loopback (127.x.x.x, ::1), and link-local (169.254.x.x) ranges. This catches attackers who point a domain's DNS record at an internal address — pattern-matching the hostname string alone would not.
+
+Hostnames that are already raw IPs are checked directly without a DNS lookup.
+
+### Redirect validation
+
+Redirects are handled **manually** with `redirect: 'manual'` rather than relying on the fetch runtime's automatic follow. The chain is capped at **3 hops**, and each redirect target is re-parsed, protocol-validated, and run through the same DNS-based SSRF check before the next request is made. This prevents a redirect chain from reaching an internal server.
+
+### Response-size limit
+
+The response body is streamed via the Fetch API's `ReadableStream` and capped at **5 MB**. If the limit is exceeded, the reader is cancelled and the partial data is discarded — the server never buffers an unbounded response.
+
+---
+
+## Testing
+
+The test suite covers:
+
+- **HTML parsing** (8 tests) — happy path, missing metadata, alt attribute edge cases, multiple H1s, script/style exclusion, empty body, missing description attribute
+- **SSRF detection** (10 tests) — loopback, private ranges, link-local, public IPs, non-IP strings, boundary cases for the 172.x.x.x range
+- **Integration** (3 tests) — hostname resolving to a private IP via DNS, redirect to a private IP, rejection beyond 3 redirect hops
+
+```bash
+npm test          # 21 tests, single run
+npm run test:watch  # watch mode during development
+```
+
+---
+
+## Deployment
+
+The project is deployed on Vercel. Pushes to the `main` branch trigger an automatic deployment.
+
+[page-pulse-delta-mocha.vercel.app](https://page-pulse-delta-mocha.vercel.app)
+
+---
+
+Built as a qualification task for [Digital Heroes](https://digitalheroesco.com).
