@@ -17,6 +17,10 @@ export function AuditForm({ onSubmit, isLoading }: AuditFormProps) {
     e.preventDefault()
     if (!input.trim() || isLoading) return
     let url = input.trim()
+    if (/^[a-z][a-z0-9+\-.]*:\/\//i.test(url) && !/^https?:\/\//i.test(url)) {
+      onSubmit(url)
+      return
+    }
     if (!/^https?:\/\//i.test(url)) {
       url = `https://${url}`
     }

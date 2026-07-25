@@ -78,6 +78,14 @@ describe('fetchTarget SSRF and redirect safety', () => {
     await expect(fetchTarget('https://example.com')).rejects.toThrow(FetchError)
   })
 
+  it('rejects a file:// URL outright without attempting any fetch', async () => {
+    const { fetchTarget, FetchError } = await import('./fetchTarget')
+
+    const spy = vi.spyOn(globalThis, 'fetch')
+    await expect(fetchTarget('file:///C:/Users/test/something.pdf')).rejects.toThrow(FetchError)
+    expect(spy).not.toHaveBeenCalled()
+  })
+
   it('rejects more than 3 redirects', async () => {
     const { fetchTarget, FetchError } = await import('./fetchTarget')
 

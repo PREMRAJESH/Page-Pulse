@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { fetchTarget, FetchError } from '@/lib/audit/fetchTarget'
 import { analyzeHtml } from '@/lib/audit/analyze'
+import { getErrorMessage } from '@/lib/audit/errors'
 import type { AuditResult, AuditError } from '@/lib/audit/types'
 
 export async function POST(request: NextRequest): Promise<Response> {
@@ -9,16 +10,16 @@ export async function POST(request: NextRequest): Promise<Response> {
     try {
       body = await request.json()
     } catch {
-      return errorResponse({ code: 'INVALID_URL', message: 'That doesn\'t look like a valid URL.' }, 400)
+      return errorResponse({ code: 'INVALID_URL', message: getErrorMessage('INVALID_URL') }, 400)
     }
 
     if (!body.url || typeof body.url !== 'string') {
-      return errorResponse({ code: 'INVALID_URL', message: 'That doesn\'t look like a valid URL.' }, 400)
+      return errorResponse({ code: 'INVALID_URL', message: getErrorMessage('INVALID_URL') }, 400)
     }
 
     const trimmedUrl = body.url.trim()
     if (!trimmedUrl) {
-      return errorResponse({ code: 'INVALID_URL', message: 'That doesn\'t look like a valid URL.' }, 400)
+      return errorResponse({ code: 'INVALID_URL', message: getErrorMessage('INVALID_URL') }, 400)
     }
 
     const { html, status: httpStatus, responseTimeMs } = await fetchTarget(trimmedUrl)
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     }
 
     console.error('Unhandled error in /api/audit:', err)
-    return errorResponse({ code: 'INTERNAL', message: 'Something went wrong on our end — try again.' }, 500)
+    return errorResponse({ code: 'INTERNAL', message: getErrorMessage('INTERNAL') }, 500)
   }
 }
 

@@ -1,5 +1,7 @@
 import * as net from 'net'
 import { lookup } from 'node:dns/promises'
+import { getErrorMessage } from './errors'
+import type { AuditError } from './types'
 
 const TIMEOUT_MS = 8000
 const MAX_BODY_BYTES = 5 * 1024 * 1024
@@ -15,7 +17,7 @@ interface FetchResult {
 
 export class FetchError extends Error {
   constructor(
-    public code: 'INVALID_URL' | 'TIMEOUT' | 'UNREACHABLE' | 'NOT_HTML' | 'INTERNAL',
+    public code: AuditError['code'],
     message: string
   ) {
     super(message)
@@ -47,12 +49,12 @@ async function rejectIfPrivateTarget(hostname: string): Promise<void> {
   const normalized = hostname.toLowerCase()
 
   if (normalized === 'localhost' || normalized === '127.0.0.1' || normalized === '::1') {
-    throw new FetchError('INVALID_URL', 'That URL can\'t be audited.')
+    throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
   }
 
   if (net.isIP(normalized)) {
     if (isPrivateIp(normalized)) {
-      throw new FetchError('INVALID_URL', 'That URL can\'t be audited.')
+      throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
     }
     return
   }
@@ -60,7 +62,7 @@ async function rejectIfPrivateTarget(hostname: string): Promise<void> {
   try {
     const { address } = await lookup(hostname)
     if (isPrivateIp(address)) {
-      throw new FetchError('INVALID_URL', 'That URL can\'t be audited.')
+      throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
     }
   } catch (err) {
     if (err instanceof FetchError) throw err
@@ -72,11 +74,11 @@ function parseAndValidateUrl(raw: string): URL {
   try {
     url = new URL(raw.trim())
   } catch {
-    throw new FetchError('INVALID_URL', 'That doesn\'t look like a valid URL.')
+    throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
   }
 
   if (!['http:', 'https:'].includes(url.protocol)) {
-    throw new FetchError('INVALID_URL', 'That URL can\'t be audited.')
+    throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
   }
 
   return url
@@ -105,27 +107,27 @@ export async function fetchTarget(rawUrl: string): Promise<FetchResult> {
     } catch (err: unknown) {
       clearTimeout(timeout)
       if (err instanceof Error && err.name === 'AbortError') {
-        throw new FetchError('TIMEOUT', 'That site took too long to respond.')
+        throw new FetchError('TIMEOUT', getErrorMessage('TIMEOUT'))
       }
-      throw new FetchError('UNREACHABLE', 'Couldn\'t reach that site — check the URL and try again.')
+      throw new FetchError('UNREACHABLE', getErrorMessage('UNREACHABLE'))
     }
     clearTimeout(timeout)
 
     if (REDIRECT_STATUSES.has(res.status)) {
       redirectCount++
       if (redirectCount > maxRedirects) {
-        throw new FetchError('UNREACHABLE', 'That site redirected too many times.')
+        throw new FetchError('UNREACHABLE', getErrorMessage('UNREACHABLE'))
       }
 
       const location = res.headers.get('location')
       if (!location) {
-        throw new FetchError('UNREACHABLE', 'Redirect with no location header.')
+        throw new FetchError('UNREACHABLE', getErrorMessage('UNREACHABLE'))
       }
 
       url = new URL(location, url)
 
       if (!['http:', 'https:'].includes(url.protocol)) {
-        throw new FetchError('INVALID_URL', 'That URL can\'t be audited.')
+        throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
       }
 
       await rejectIfPrivateTarget(url.hostname)
@@ -135,15 +137,15 @@ export async function fetchTarget(rawUrl: string): Promise<FetchResult> {
 
     const contentType = res.headers.get('content-type') ?? ''
     if (!contentType.startsWith('text/html')) {
-      const typeLabel = contentType || 'unknown'
-      throw new FetchError('NOT_HTML', `That URL doesn't point to a webpage (got a ${typeLabel}).`)
+      const typeLabel = contentType || ''
+      throw new FetchError('NOT_HTML', getErrorMessage('NOT_HTML', typeLabel))
     }
 
     let html: string
     try {
       const reader = res.body?.getReader()
       if (!reader) {
-        throw new FetchError('NOT_HTML', 'That URL doesn\'t point to a webpage (got an empty response).')
+        throw new FetchError('NOT_HTML', getErrorMessage('NOT_HTML'))
       }
 
       const chunks: Uint8Array[] = []
@@ -163,7 +165,7 @@ export async function fetchTarget(rawUrl: string): Promise<FetchResult> {
       html = chunks.map((c) => decoder.decode(c, { stream: true })).join('')
       html += decoder.decode()
     } catch {
-      throw new FetchError('UNREACHABLE', 'Couldn\'t reach that site — check the URL and try again.')
+      throw new FetchError('UNREACHABLE', getErrorMessage('UNREACHABLE'))
     }
 
     const responseTimeMs = Math.round(performance.now() - start)

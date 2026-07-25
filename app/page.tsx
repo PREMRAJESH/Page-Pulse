@@ -6,6 +6,7 @@ import { AuditReport } from '@/components/audit/AuditReport'
 import { AuditError } from '@/components/audit/AuditError'
 import { Footer } from '@/components/layout/Footer'
 import { Skeleton } from '@/components/ui/skeleton'
+import { getErrorMessage } from '@/lib/audit/errors'
 import type { Report, AuditError as AuditErrorType } from '@/lib/audit/types'
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
@@ -19,6 +20,20 @@ export default function Home() {
 
   const handleSubmit = async (url: string) => {
     abortRef.current?.abort()
+
+    try {
+      new URL(url)
+    } catch {
+      setError({ code: 'INVALID_URL', message: getErrorMessage('INVALID_URL') })
+      setStatus('error')
+      return
+    }
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      setError({ code: 'INVALID_URL', message: getErrorMessage('INVALID_URL') })
+      setStatus('error')
+      return
+    }
+
     const controller = new AbortController()
     abortRef.current = controller
 
@@ -46,7 +61,7 @@ export default function Home() {
       }
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') return
-      setError({ code: 'UNREACHABLE', message: 'Couldn\'t complete the request.' })
+      setError({ code: 'UNREACHABLE', message: getErrorMessage('UNREACHABLE') })
       setStatus('error')
     }
   }
