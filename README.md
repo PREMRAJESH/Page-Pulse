@@ -96,6 +96,17 @@ The outbound fetch uses an `AbortController` with an 8-second budget. Long enoug
 ### 3. Word count approximation
 Visible text nodes are counted after stripping `<script>`, `<style>`, and `<noscript>` content. This is documented as an approximation — exact typographic word count would require a renderer.
 
+## Security
+
+### Server-Side Request Forgery (SSRF) protection
+The hostname is **resolved via DNS first**, then the resolved IP is checked against private (10.x.x.x, 172.16-31.x.x, 192.168.x.x), loopback (127.x.x.x, ::1), and link-local (169.254.x.x) ranges. This catches attackers who point a domain's DNS record at an internal address — pattern-matching the hostname string alone would miss that.
+
+### Redirect safety
+Redirects are handled **manually** (not auto-followed by the fetch runtime), capped at **3 hops**, and each redirect target is re-validated with the same full DN`S + private-IP check before it is followed. This prevents a redirect chain from reaching an internal server.
+
+### Response-size limit
+The response body is streamed and capped at **5 MB**. If the limit is exceeded, the reader is cancelled and the partial content is discarded — the server never buffers an unbounded response.
+
 ---
 
 Built for [Digital Heroes Training Task](https://digitalheroesco.com)

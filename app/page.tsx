@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { AuditForm } from '@/components/audit/AuditForm'
 import { AuditReport } from '@/components/audit/AuditReport'
 import { AuditError } from '@/components/audit/AuditError'
@@ -15,8 +15,13 @@ export default function Home() {
   const [report, setReport] = useState<Report | null>(null)
   const [error, setError] = useState<AuditErrorType | null>(null)
   const [lastUrl, setLastUrl] = useState<string>('')
+  const abortRef = useRef<AbortController | null>(null)
 
   const handleSubmit = async (url: string) => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     setStatus('loading')
     setReport(null)
     setError(null)
@@ -27,6 +32,7 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
+        signal: controller.signal,
       })
 
       const data = await res.json()
@@ -38,7 +44,8 @@ export default function Home() {
         setError(data.error)
         setStatus('error')
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return
       setError({ code: 'UNREACHABLE', message: 'Couldn\'t complete the request.' })
       setStatus('error')
     }
