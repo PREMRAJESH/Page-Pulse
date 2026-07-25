@@ -1,7 +1,5 @@
 import * as net from 'net'
-import * as dns from 'node:dns'
 import { lookup } from 'node:dns/promises'
-import { Agent } from 'undici'
 import { getErrorMessage } from './errors'
 import type { AuditError } from './types'
 
@@ -16,8 +14,6 @@ interface FetchResult {
   headers: Headers
   responseTimeMs: number
 }
-
-type FetchInit = RequestInit & { dispatcher?: Agent }
 
 export class FetchError extends Error {
   constructor(
@@ -47,25 +43,6 @@ export function isPrivateIp(address: string): boolean {
   if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true
 
   return false
-}
-
-function createPinnedAgent(hostname: string, ip: string): Agent {
-  return new Agent({
-    connect: {
-      lookup: (
-        _lookupHostname: string,
-        opts: any,
-        cb: (err: NodeJS.ErrnoException | null, address: string | dns.LookupAddress[], family?: number) => void
-      ) => {
-        const family = net.isIPv6(ip) ? 6 : 4
-        if (opts.all) {
-          cb(null, [{ address: ip, family }])
-        } else {
-          cb(null, ip, family)
-        }
-      },
-    },
-  })
 }
 
 async function resolveAndValidateHostname(hostname: string): Promise<string | null> {
@@ -125,10 +102,6 @@ export async function fetchTarget(rawUrl: string): Promise<FetchResult> {
 
   const url = parseAndValidateUrl(trimmed)
   const validatedIp = await resolveAndValidateHostname(url.hostname)
-  let dispatcher: Agent | undefined
-  if (validatedIp) {
-    dispatcher = createPinnedAgent(url.hostname, validatedIp)
-  }
 
   let redirectCount = 0
   const maxRedirects = 3
@@ -140,13 +113,11 @@ export async function fetchTarget(rawUrl: string): Promise<FetchResult> {
 
     let res: Response
     try {
-      const fetchInit: FetchInit = {
+      res = await fetch(currentUrl, {
         signal: controller.signal,
         redirect: 'manual',
         headers: { 'User-Agent': 'PagePulse/1.0' },
-        dispatcher,
-      }
-      res = await fetch(currentUrl, fetchInit)
+      })
     } catch (err: unknown) {
       clearTimeout(timeout)
       if (err instanceof Error && err.name === 'AbortError') {
@@ -173,8 +144,7 @@ export async function fetchTarget(rawUrl: string): Promise<FetchResult> {
         throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
       }
 
-      const redirectIp = await resolveAndValidateHostname(currentUrl.hostname)
-      dispatcher = redirectIp ? createPinnedAgent(currentUrl.hostname, redirectIp) : undefined
+      await resolveAndValidateHostname(currentUrl.hostname)
 
       continue
     }
