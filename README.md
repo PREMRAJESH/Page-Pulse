@@ -31,6 +31,60 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run test`    | Run tests                |
 | `npm run lint`    | Run linter               |
 
+## API Contract
+
+### `POST /api/audit`
+
+Submit a URL for auditing.
+
+**Request body**
+
+```json
+{
+  "url": "https://example.com"
+}
+```
+
+**Response (200)**
+
+```json
+{
+  "ok": true,
+  "report": {
+    "url": "https://example.com",
+    "httpStatus": 200,
+    "responseTimeMs": 312,
+    "title": "Example Domain",
+    "metaDescription": null,
+    "h1Count": 1,
+    "imagesMissingAlt": 0,
+    "totalImages": 0,
+    "wordCount": 14,
+    "fetchedAt": "2026-07-25T14:30:00.000Z"
+  }
+}
+```
+
+**Error responses**
+
+| HTTP Status | Code | Meaning |
+|---|---|---|
+| 400 | `INVALID_URL` | Malformed, empty, or private/local URL |
+| 502 | `UNREACHABLE` | Host unreachable or DNS failure |
+| 504 | `TIMEOUT` | Response took longer than 8 seconds |
+| 422 | `NOT_HTML` | Response was not HTML (PDF, image, etc.) |
+| 500 | `INTERNAL` | Unexpected server error |
+
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "INVALID_URL",
+    "message": "That doesn't look like a valid URL."
+  }
+}
+```
+
 ## Design Decisions
 
 ### 1. cheerio over Puppeteer/Playwright
