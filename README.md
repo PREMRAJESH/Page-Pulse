@@ -1,8 +1,23 @@
-# Page Pulse
+<div align="center">
 
-A URL audit tool that performs a structural analysis of any public web page. Submit a URL and receive HTTP status, response time, title, meta description, H1 count, images missing alt text, and approximate word count — all without a headless browser.
+![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript)
+![Tests](https://img.shields.io/badge/Vitest-21_tests-6E9F18?logo=vitest)
+![Vercel](https://img.shields.io/badge/Vercel-deployed-000?logo=vercel)
 
-**Live:** [page-pulse-delta-mocha.vercel.app](https://page-pulse-delta-mocha.vercel.app)
+</div>
+
+<h1 align="center">Page Pulse</h1>
+
+<p align="center">
+  A URL audit tool. Submit a URL and get a structural HTML report — HTTP status,
+  response time, title, meta description, H1 count, images missing alt text, and
+  approximate word count. No headless browser required.
+</p>
+
+<p align="center">
+  <strong><a href="https://page-pulse-delta-mocha.vercel.app">page-pulse-delta-mocha.vercel.app</a></strong>
+</p>
 
 ---
 
