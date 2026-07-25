@@ -1,5 +1,6 @@
 import * as net from 'net'
 import { lookup } from 'node:dns/promises'
+import { Agent } from 'undici'
 import { getErrorMessage } from './errors'
 import type { AuditError } from './types'
 
@@ -45,7 +46,26 @@ export function isPrivateIp(address: string): boolean {
   return false
 }
 
-async function rejectIfPrivateTarget(hostname: string): Promise<void> {
+function createPinnedAgent(hostname: string, ip: string): Agent {
+  return new Agent({
+    connect: {
+      lookup: (
+        _lookupHostname: string,
+        opts: { family?: number; hints?: number; all?: boolean; verbatim?: boolean },
+        cb: (err: Error | null, address?: string | { address: string; family: number }[], family?: number) => void
+      ) => {
+        const family = net.isIPv6(ip) ? 6 : 4
+        if (opts.all) {
+          cb(null, [{ address: ip, family }])
+        } else {
+          cb(null, ip, family)
+        }
+      },
+    },
+  })
+}
+
+async function resolveAndValidateHostname(hostname: string): Promise<string | null> {
   const normalized = hostname.toLowerCase()
 
   if (normalized === 'localhost' || normalized === '127.0.0.1' || normalized === '::1') {
@@ -56,7 +76,7 @@ async function rejectIfPrivateTarget(hostname: string): Promise<void> {
     if (isPrivateIp(normalized)) {
       throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
     }
-    return
+    return normalized
   }
 
   try {
@@ -64,8 +84,10 @@ async function rejectIfPrivateTarget(hostname: string): Promise<void> {
     if (isPrivateIp(address)) {
       throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
     }
+    return address
   } catch (err) {
     if (err instanceof FetchError) throw err
+    return null
   }
 }
 
@@ -87,11 +109,16 @@ function parseAndValidateUrl(raw: string): URL {
 export async function fetchTarget(rawUrl: string): Promise<FetchResult> {
   const start = performance.now()
 
-  let url = parseAndValidateUrl(rawUrl)
-  await rejectIfPrivateTarget(url.hostname)
+  const url = parseAndValidateUrl(rawUrl)
+  const validatedIp = await resolveAndValidateHostname(url.hostname)
+  let dispatcher: Agent | undefined
+  if (validatedIp) {
+    dispatcher = createPinnedAgent(url.hostname, validatedIp)
+  }
 
   let redirectCount = 0
   const maxRedirects = 3
+  let currentUrl = url
 
   while (true) {
     const controller = new AbortController()
@@ -99,10 +126,11 @@ export async function fetchTarget(rawUrl: string): Promise<FetchResult> {
 
     let res: Response
     try {
-      res = await fetch(url, {
+      res = await fetch(currentUrl, {
         signal: controller.signal,
         redirect: 'manual',
         headers: { 'User-Agent': 'PagePulse/1.0' },
+        dispatcher,
       })
     } catch (err: unknown) {
       clearTimeout(timeout)
@@ -124,13 +152,14 @@ export async function fetchTarget(rawUrl: string): Promise<FetchResult> {
         throw new FetchError('UNREACHABLE', getErrorMessage('UNREACHABLE'))
       }
 
-      url = new URL(location, url)
+      currentUrl = new URL(location, currentUrl)
 
-      if (!['http:', 'https:'].includes(url.protocol)) {
+      if (!['http:', 'https:'].includes(currentUrl.protocol)) {
         throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
       }
 
-      await rejectIfPrivateTarget(url.hostname)
+      const redirectIp = await resolveAndValidateHostname(currentUrl.hostname)
+      dispatcher = redirectIp ? createPinnedAgent(currentUrl.hostname, redirectIp) : undefined
 
       continue
     }

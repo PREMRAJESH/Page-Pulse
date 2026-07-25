@@ -13,7 +13,7 @@
 
 ![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript)
-![Tests](https://img.shields.io/badge/Vitest-21_tests-6E9F18?logo=vitest)
+![Tests](https://img.shields.io/badge/Vitest-23_tests-6E9F18?logo=vitest)
 ![Vercel](https://img.shields.io/badge/Vercel-deployed-000?logo=vercel)
 
 </div>
@@ -190,11 +190,13 @@ Visible text is counted after stripping `<script>`, `<style>`, and `<noscript>` 
 
 The target hostname is **resolved via DNS** (`dns.promises.lookup`) before any fetch is made. The resolved IP is then checked against private (10.x.x.x, 172.16–31.x.x, 192.168.x.x), loopback (127.x.x.x, ::1), and link-local (169.254.x.x) ranges. This catches attackers who point a domain's DNS record at an internal address — pattern-matching the hostname string alone would not.
 
-Hostnames that are already raw IPs are checked directly without a DNS lookup.
+To close the **TOCTOU race** between the DNS-resolution check and the actual HTTP connection, the outbound `fetch` is pinned to the validated IP via a custom undici `Agent` with an overridden `connect.lookup`. Node's `net.connect()` and `tls.connect()` use this pinned IP instead of re-resolving the hostname, while the original hostname is preserved in the `Host` header and TLS SNI so virtual hosting and certificate validation still work.
+
+Hostnames that are already raw IPs are checked directly without a DNS lookup and are pinned to that same IP.
 
 ### Redirect validation
 
-Redirects are handled **manually** with `redirect: 'manual'` rather than relying on the fetch runtime's automatic follow. The chain is capped at **3 hops**, and each redirect target is re-parsed, protocol-validated, and run through the same DNS-based SSRF check before the next request is made. This prevents a redirect chain from reaching an internal server.
+Redirects are handled **manually** with `redirect: 'manual'` rather than relying on the fetch runtime's automatic follow. The chain is capped at **3 hops**, and each redirect target is re-parsed, protocol-validated, and run through the same DNS-based SSRF check — including a fresh DNS pin — before the next request is made. This prevents a redirect chain from reaching an internal server.
 
 ### Response-size limit
 
@@ -208,10 +210,10 @@ The test suite covers:
 
 - **HTML parsing** (8 tests) — happy path, missing metadata, alt attribute edge cases, multiple H1s, script/style exclusion, empty body, missing description attribute
 - **SSRF detection** (10 tests) — loopback, private ranges, link-local, public IPs, non-IP strings, boundary cases for the 172.x.x.x range
-- **Integration** (3 tests) — hostname resolving to a private IP via DNS, redirect to a private IP, rejection beyond 3 redirect hops
+- **Integration** (4 tests) — hostname resolving to a private IP via DNS, redirect to a private IP, DNS rebinding prevention (pinned connection), rejection beyond 3 redirect hops
 
 ```bash
-npm test          # 21 tests, single run
+npm test          # 23 tests, single run
 npm run test:watch  # watch mode during development
 ```
 

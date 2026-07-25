@@ -51,8 +51,10 @@ describe('isPrivateIp', () => {
 })
 
 describe('fetchTarget SSRF and redirect safety', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.restoreAllMocks()
+    const { lookup } = await import('node:dns/promises')
+    vi.mocked(lookup).mockClear()
     dnsMock.address = '93.184.216.34'
   })
 
@@ -84,6 +86,23 @@ describe('fetchTarget SSRF and redirect safety', () => {
     const spy = vi.spyOn(globalThis, 'fetch')
     await expect(fetchTarget('file:///C:/Users/test/something.pdf')).rejects.toThrow(FetchError)
     expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('pins connection to validated IP — no DNS re-resolution on fetch', async () => {
+    dnsMock.address = '93.184.216.34'
+    const { lookup } = await import('node:dns/promises')
+    const { fetchTarget } = await import('./fetchTarget')
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('<html><body>safe</body></html>', {
+        status: 200,
+        headers: { 'content-type': 'text/html' },
+      })
+    )
+
+    await fetchTarget('https://example.com')
+
+    expect(vi.mocked(lookup)).toHaveBeenCalledTimes(1)
   })
 
   it('rejects more than 3 redirects', async () => {
