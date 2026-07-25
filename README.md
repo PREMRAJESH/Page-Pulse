@@ -1,12 +1,3 @@
-<div align="center">
-
-![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript)
-![Tests](https://img.shields.io/badge/Vitest-21_tests-6E9F18?logo=vitest)
-![Vercel](https://img.shields.io/badge/Vercel-deployed-000?logo=vercel)
-
-</div>
-
 <p align="center">
   <img src="public/logo.svg" alt="Page Pulse logo" width="32" height="32">
 </p>
@@ -18,7 +9,14 @@
   response time, title, meta description, H1 count, images missing alt text, and
   approximate word count. No headless browser required.
 </p>
+<div align="center">
 
+![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript)
+![Tests](https://img.shields.io/badge/Vitest-21_tests-6E9F18?logo=vitest)
+![Vercel](https://img.shields.io/badge/Vercel-deployed-000?logo=vercel)
+
+</div>
 <p align="center">
   <strong><a href="https://page-pulse-delta-mocha.vercel.app">page-pulse-delta-mocha.vercel.app</a></strong>
 </p>
@@ -39,15 +37,15 @@
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | [Next.js](https://nextjs.org) 16.2.11 (App Router) |
-| Language | TypeScript (strict mode) |
-| Styling | [Tailwind CSS](https://tailwindcss.com) v4 + [shadcn/ui](https://ui.shadcn.com) |
-| HTML parsing | [cheerio](https://cheerio.js.org) |
-| Testing | [Vitest](https://vitest.dev) |
-| Linting | [ESLint](https://eslint.org) |
-| Deployment | [Vercel](https://vercel.com) |
+| Layer        | Technology                                                                      |
+| ------------ | ------------------------------------------------------------------------------- |
+| Framework    | [Next.js](https://nextjs.org) 16.2.11 (App Router)                              |
+| Language     | TypeScript (strict mode)                                                        |
+| Styling      | [Tailwind CSS](https://tailwindcss.com) v4 + [shadcn/ui](https://ui.shadcn.com) |
+| HTML parsing | [cheerio](https://cheerio.js.org)                                               |
+| Testing      | [Vitest](https://vitest.dev)                                                    |
+| Linting      | [ESLint](https://eslint.org)                                                    |
+| Deployment   | [Vercel](https://vercel.com)                                                    |
 
 ---
 
@@ -62,14 +60,14 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ### Scripts
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start the development server |
-| `npm run build` | Create a production build |
-| `npm start` | Start the production server |
-| `npm test` | Run all tests (single run) |
-| `npm run test:watch` | Run tests in watch mode |
-| `npm run lint` | Run ESLint |
+| Command              | Description                  |
+| -------------------- | ---------------------------- |
+| `npm run dev`        | Start the development server |
+| `npm run build`      | Create a production build    |
+| `npm start`          | Start the production server  |
+| `npm test`           | Run all tests (single run)   |
+| `npm run test:watch` | Run tests in watch mode      |
+| `npm run lint`       | Run ESLint                   |
 
 ---
 
@@ -109,13 +107,13 @@ Fetches and analyzes a public URL.
 
 **Error responses**
 
-| Status | Code | Meaning |
-|---|---|---|
-| 400 | `INVALID_URL` | Malformed, empty, or private/local URL |
-| 502 | `UNREACHABLE` | Host unreachable or DNS failure |
-| 504 | `TIMEOUT` | Response exceeded the 8-second limit |
-| 422 | `NOT_HTML` | Response content-type is not HTML |
-| 500 | `INTERNAL` | Unexpected server error |
+| Status | Code          | Meaning                                |
+| ------ | ------------- | -------------------------------------- |
+| 400    | `INVALID_URL` | Malformed, empty, or private/local URL |
+| 502    | `UNREACHABLE` | Host unreachable or DNS failure        |
+| 504    | `TIMEOUT`     | Response exceeded the 8-second limit   |
+| 422    | `NOT_HTML`    | Response content-type is not HTML      |
+| 500    | `INTERNAL`    | Unexpected server error                |
 
 ```json
 {
@@ -226,7 +224,7 @@ The project is deployed on Vercel. Pushes to the `main` branch trigger an automa
 [page-pulse-delta-mocha.vercel.app](https://page-pulse-delta-mocha.vercel.app)
 
 <p align="center">
-  <img src="public/pulse.svg" alt="" width="24" height="12">
+  <img src="public/pulse.svg" alt="" width="60" height="30">
 </p>
 
 ---
