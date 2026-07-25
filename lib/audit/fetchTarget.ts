@@ -94,6 +94,8 @@ async function resolveAndValidateHostname(hostname: string): Promise<string | nu
   }
 }
 
+const BAD_HOSTNAMES = new Set(['file', 'data', 'javascript', 'vbscript', 'about'])
+
 function parseAndValidateUrl(raw: string): URL {
   let url: URL
   try {
@@ -106,13 +108,22 @@ function parseAndValidateUrl(raw: string): URL {
     throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
   }
 
+  if (BAD_HOSTNAMES.has(url.hostname.toLowerCase())) {
+    throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
+  }
+
   return url
 }
 
 export async function fetchTarget(rawUrl: string): Promise<FetchResult> {
+  const trimmed = rawUrl.trim()
+  if (!/^https?:\/\//i.test(trimmed)) {
+    throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
+  }
+
   const start = performance.now()
 
-  const url = parseAndValidateUrl(rawUrl)
+  const url = parseAndValidateUrl(trimmed)
   const validatedIp = await resolveAndValidateHostname(url.hostname)
   let dispatcher: Agent | undefined
   if (validatedIp) {
