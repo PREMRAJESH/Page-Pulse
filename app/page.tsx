@@ -52,8 +52,8 @@ export default function Home() {
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-3xl px-3 py-6 sm:py-12">
-      <div className="animate-fade-in overflow-hidden rounded-[2px] border border-zinc-200 bg-paper page-shadow dark:border-zinc-700/60">
+    <div className="mx-auto min-h-screen max-w-3xl px-4 py-8 sm:py-16">
+      <div className="animate-fade-in rounded-[2px] border border-zinc-200 bg-paper page-shadow dark:border-zinc-700/60">
         <header className="px-8 pb-6 pt-10 text-center sm:px-12 sm:pb-8 sm:pt-14">
           <p className="mb-6 text-[11px] font-medium uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500">Structural Audit Report</p>
           <div className="mx-auto mb-3 flex items-center justify-center gap-3">
