@@ -53,7 +53,7 @@ export default function Home() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col px-4 py-8">
-      <header className="mb-8 text-center">
+      <header className="mb-8 text-center animate-fade-in">
         <div className="flex items-center justify-center gap-2.5">
           <img src="/logo.svg" alt="Page Pulse logo" className="size-7" />
           <h1 className="text-3xl font-bold tracking-tight">Page Pulse</h1>
@@ -62,24 +62,28 @@ export default function Home() {
       </header>
 
       <main className="flex-1 space-y-6">
-        <AuditForm onSubmit={handleSubmit} isLoading={status === 'loading'} />
+        <div className="animate-fade-in-up delay-100">
+          <AuditForm onSubmit={handleSubmit} isLoading={status === 'loading'} />
+        </div>
 
         <div aria-live="polite" className="space-y-4">
           {status === 'loading' && (
-            <div className="space-y-4">
-              <Skeleton className="h-40 w-full" />
-              <Skeleton className="h-32 w-full" />
-              <Skeleton className="h-32 w-full" />
+            <div className="space-y-4 animate-fade-in">
+              <Skeleton className="h-40 w-full rounded-xl" />
+              <Skeleton className="h-32 w-full rounded-xl" />
+              <Skeleton className="h-32 w-full rounded-xl" />
             </div>
           )}
 
           {status === 'success' && report && <AuditReport report={report} />}
 
           {status === 'error' && error && (
-            <AuditError
-              error={error}
-              onRetry={() => handleSubmit(lastUrl)}
-            />
+            <div className="animate-scale-in">
+              <AuditError
+                error={error}
+                onRetry={() => handleSubmit(lastUrl)}
+              />
+            </div>
           )}
         </div>
       </main>

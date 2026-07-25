@@ -17,7 +17,7 @@ export function AuditError({ error, onRetry }: AuditErrorProps) {
       <AlertTitle>Audit Failed</AlertTitle>
       <AlertDescription className="mt-1">{error.message}</AlertDescription>
       {onRetry && (
-        <Button variant="outline" size="sm" onClick={onRetry} className="mt-3">
+        <Button variant="outline" size="sm" onClick={onRetry} className="mt-3 transition-all duration-200 active:scale-95">
           <RefreshCw className="mr-2 h-3 w-3" />
           Try Again
         </Button>

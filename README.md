@@ -224,9 +224,9 @@ The project is deployed on Vercel. Pushes to the `main` branch trigger an automa
 [page-pulse-delta-mocha.vercel.app](https://page-pulse-delta-mocha.vercel.app)
 
 <p align="center">
-  <img src="public/pulse.svg" alt="" width="60" height="30">
+  <img src="public/pulse.svg" alt="" width="30" height="20">
 </p>
 
 ---
 
-Built as a qualification task for [Digital Heroes](https://digitalheroesco.com).
+Built for [Digital Heroes](https://digitalheroesco.com).
