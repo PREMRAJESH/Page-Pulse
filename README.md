@@ -7,6 +7,10 @@
 
 </div>
 
+<p align="center">
+  <img src="public/logo.svg" alt="Page Pulse logo" width="32" height="32">
+</p>
+
 <h1 align="center">Page Pulse</h1>
 
 <p align="center">
@@ -220,6 +224,10 @@ npm run test:watch  # watch mode during development
 The project is deployed on Vercel. Pushes to the `main` branch trigger an automatic deployment.
 
 [page-pulse-delta-mocha.vercel.app](https://page-pulse-delta-mocha.vercel.app)
+
+<p align="center">
+  <img src="public/pulse.svg" alt="" width="24" height="12">
+</p>
 
 ---
 
