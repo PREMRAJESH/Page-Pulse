@@ -42,8 +42,3 @@ next-env.d.ts
 
 # Internal planning docs — not part of the shipped product
 .ai/
-
-# Server output logs
-.server-*.txt
-
-.vercel
