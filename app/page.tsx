@@ -55,21 +55,7 @@ export default function Home() {
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col px-4 py-8">
       <header className="mb-8 text-center">
         <div className="flex items-center justify-center gap-2.5">
-          <svg
-            viewBox="0 0 32 32"
-            className="size-7 shrink-0 text-indigo-500"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M6 4h14l6 6v18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
-            <path d="M20 4v6h6" />
-            <polyline points="8.5,18 11,18 13,14 15,22 17,16 19,20 22,18" />
-            <circle cx="22" cy="18" r="1.5" fill="currentColor" stroke="none" />
-          </svg>
+          <img src="/logo.svg" alt="Page Pulse logo" className="size-7" />
           <h1 className="text-3xl font-bold tracking-tight">Page Pulse</h1>
         </div>
         <p className="mt-1.5 text-muted-foreground">Get a structural audit of any web page</p>
