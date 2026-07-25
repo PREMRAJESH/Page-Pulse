@@ -22,15 +22,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       return errorResponse({ code: 'INVALID_URL', message: getErrorMessage('INVALID_URL') }, 400)
     }
 
-    try {
-      var result = await fetchTarget(trimmedUrl)
-    } catch (e: any) {
-      return Response.json({
-        ok: false,
-        debug: { name: e.name, code: e.code, message: e.message, stack: e.stack?.split('\n').slice(0, 3).join('\\n') }
-      }, { status: 500 })
-    }
-    const { html, status: httpStatus, responseTimeMs } = result
+    const { html, status: httpStatus, responseTimeMs } = await fetchTarget(trimmedUrl)
     const fetchedAt = new Date().toISOString()
     const report = analyzeHtml(html, trimmedUrl, httpStatus, responseTimeMs, fetchedAt)
 

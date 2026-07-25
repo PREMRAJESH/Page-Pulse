@@ -49,13 +49,11 @@ async function resolveAndValidateHostname(hostname: string): Promise<string | nu
   const normalized = hostname.toLowerCase()
 
   if (normalized === 'localhost' || normalized === '127.0.0.1' || normalized === '::1') {
-    console.error('DEBUG resolveAndValidate: localhost');
     throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
   }
 
   if (net.isIP(normalized)) {
     if (isPrivateIp(normalized)) {
-      console.error('DEBUG resolveAndValidate: private IP literal');
       throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
     }
     return normalized
@@ -63,14 +61,11 @@ async function resolveAndValidateHostname(hostname: string): Promise<string | nu
 
   try {
     const { address } = await lookup(hostname)
-    console.error('DEBUG resolveAndValidate: resolved', hostname, '->', address, 'private?', isPrivateIp(address));
     if (isPrivateIp(address)) {
-      console.error('DEBUG resolveAndValidate: private IP resolved');
       throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
     }
     return address
   } catch (err) {
-    console.error('DEBUG resolveAndValidate: DNS lookup error for', hostname, err instanceof Error ? err.message : err);
     if (err instanceof FetchError) throw err
     return null
   }
@@ -83,17 +78,14 @@ function parseAndValidateUrl(raw: string): URL {
   try {
     url = new URL(raw.trim())
   } catch {
-    console.error('DEBUG parseAndValidate: URL parse failed');
     throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
   }
 
   if (!['http:', 'https:'].includes(url.protocol)) {
-    console.error('DEBUG parseAndValidate: bad protocol', url.protocol);
     throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
   }
 
   if (BAD_HOSTNAMES.has(url.hostname.toLowerCase())) {
-    console.error('DEBUG parseAndValidate: bad hostname', url.hostname);
     throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
   }
 
@@ -102,18 +94,14 @@ function parseAndValidateUrl(raw: string): URL {
 
 export async function fetchTarget(rawUrl: string): Promise<FetchResult> {
   const trimmed = rawUrl.trim()
-  console.error('DEBUG fetchTarget entered: rawUrl=' + JSON.stringify(rawUrl))
   if (!/^https?:\/\//i.test(trimmed)) {
-    console.error('DEBUG fetchTarget: raw-string check failed');
     throw new FetchError('INVALID_URL', getErrorMessage('INVALID_URL'))
   }
 
   const start = performance.now()
 
   const url = parseAndValidateUrl(trimmed)
-  console.error('DEBUG fetchTarget: parseAndValidateUrl OK, hostname=' + url.hostname)
-  const validatedIp = await resolveAndValidateHostname(url.hostname)
-  console.error('DEBUG fetchTarget: resolveAndValidateHostname returned ip=' + validatedIp)
+  await resolveAndValidateHostname(url.hostname)
 
   let redirectCount = 0
   const maxRedirects = 3
