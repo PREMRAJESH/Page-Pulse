@@ -117,6 +117,44 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+.page-shadow {
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.03),
+    0 12px 32px rgba(0, 0, 0, 0.02);
+}
+
+.dark .page-shadow {
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.bg-paper {
+  background-color: #fafaf9;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 23px,
+      rgba(0, 0, 0, 0.03) 23px,
+      rgba(0, 0, 0, 0.03) 24px
+    );
+}
+
+.dark .bg-paper {
+  background-color: #09090b;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 23px,
+      rgba(255, 255, 255, 0.02) 23px,
+      rgba(255, 255, 255, 0.02) 24px
+    );
+}
+
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }

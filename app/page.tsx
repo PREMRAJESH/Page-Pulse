@@ -52,44 +52,47 @@ export default function Home() {
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-2xl px-4 py-6 sm:py-12">
-      <div className="animate-fade-in rounded-xl bg-white shadow-sm ring-1 ring-black/5 dark:bg-zinc-900 dark:ring-white/10">
-        <header className="border-b border-zinc-100 px-6 pb-5 pt-6 text-center sm:px-8 sm:pb-6 sm:pt-8 dark:border-zinc-800">
-          <div className="flex items-center justify-center gap-2.5">
-            <img src="/logo.svg" alt="Page Pulse logo" className="size-7" />
-            <h1 className="text-3xl font-bold tracking-tight">Page Pulse</h1>
+    <div className="mx-auto min-h-screen max-w-3xl px-3 py-6 sm:py-12">
+      <div className="animate-fade-in overflow-hidden rounded-[2px] bg-paper page-shadow">
+        <header className="px-8 pb-6 pt-10 text-center sm:px-12 sm:pb-8 sm:pt-14">
+          <p className="mb-6 text-[11px] font-medium uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500">Structural Audit Report</p>
+          <div className="mx-auto mb-3 flex items-center justify-center gap-3">
+            <img src="/logo.svg" alt="Page Pulse logo" className="size-8" />
+            <h1 className="text-4xl font-light tracking-tight text-zinc-900 dark:text-zinc-50">Page Pulse</h1>
           </div>
-          <p className="mt-1.5 text-muted-foreground">Get a structural audit of any web page</p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">Get a structural audit of any web page</p>
         </header>
 
-        <main className="space-y-6 px-6 py-6 sm:px-8 sm:py-8">
-          <div className="animate-fade-in-up delay-100">
-            <AuditForm onSubmit={handleSubmit} isLoading={status === 'loading'} />
-          </div>
+        <div className="mx-auto max-w-[42rem] px-8 pb-10 sm:px-12 sm:pb-14">
+          <main className="space-y-8">
+            <div className="animate-fade-in-up delay-100">
+              <AuditForm onSubmit={handleSubmit} isLoading={status === 'loading'} />
+            </div>
 
-          <div aria-live="polite" className="space-y-4">
-            {status === 'loading' && (
-              <div className="space-y-4 animate-fade-in">
-                <Skeleton className="h-40 w-full rounded-xl" />
-                <Skeleton className="h-32 w-full rounded-xl" />
-                <Skeleton className="h-32 w-full rounded-xl" />
-              </div>
-            )}
+            <div aria-live="polite" className="space-y-6">
+              {status === 'loading' && (
+                <div className="space-y-4 animate-fade-in">
+                  <Skeleton className="h-40 w-full" />
+                  <Skeleton className="h-32 w-full" />
+                  <Skeleton className="h-32 w-full" />
+                </div>
+              )}
 
-            {status === 'success' && report && <AuditReport report={report} />}
+              {status === 'success' && report && <AuditReport report={report} />}
 
-            {status === 'error' && error && (
-              <div className="animate-scale-in">
-                <AuditError
-                  error={error}
-                  onRetry={() => handleSubmit(lastUrl)}
-                />
-              </div>
-            )}
-          </div>
-        </main>
+              {status === 'error' && error && (
+                <div className="animate-scale-in">
+                  <AuditError
+                    error={error}
+                    onRetry={() => handleSubmit(lastUrl)}
+                  />
+                </div>
+              )}
+            </div>
+          </main>
 
-        <Footer />
+          <Footer />
+        </div>
       </div>
     </div>
   )
