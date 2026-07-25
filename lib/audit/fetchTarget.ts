@@ -1,4 +1,5 @@
 import * as net from 'net'
+import * as dns from 'node:dns'
 import { lookup } from 'node:dns/promises'
 import { Agent } from 'undici'
 import { getErrorMessage } from './errors'
@@ -15,6 +16,8 @@ interface FetchResult {
   headers: Headers
   responseTimeMs: number
 }
+
+type FetchInit = RequestInit & { dispatcher?: Agent }
 
 export class FetchError extends Error {
   constructor(
@@ -51,8 +54,8 @@ function createPinnedAgent(hostname: string, ip: string): Agent {
     connect: {
       lookup: (
         _lookupHostname: string,
-        opts: { family?: number; hints?: number; all?: boolean; verbatim?: boolean },
-        cb: (err: Error | null, address?: string | { address: string; family: number }[], family?: number) => void
+        opts: any,
+        cb: (err: NodeJS.ErrnoException | null, address: string | dns.LookupAddress[], family?: number) => void
       ) => {
         const family = net.isIPv6(ip) ? 6 : 4
         if (opts.all) {
@@ -126,12 +129,13 @@ export async function fetchTarget(rawUrl: string): Promise<FetchResult> {
 
     let res: Response
     try {
-      res = await fetch(currentUrl, {
+      const fetchInit: FetchInit = {
         signal: controller.signal,
         redirect: 'manual',
         headers: { 'User-Agent': 'PagePulse/1.0' },
         dispatcher,
-      })
+      }
+      res = await fetch(currentUrl, fetchInit)
     } catch (err: unknown) {
       clearTimeout(timeout)
       if (err instanceof Error && err.name === 'AbortError') {
